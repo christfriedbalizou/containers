@@ -3,7 +3,7 @@
 "aqua:go-task/task" = "3.44.0"
 "aqua:GoogleContainerTools/container-structure-test" = "1.20.0"
 "aqua:jqlang/jq" = "1.7.1"
-"aqua:mikefarah/yq" = "4.45.4"
+"aqua:mikefarah/yq" = "4.47.2"
 
 [hooks]
 postinstall = [
