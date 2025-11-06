@@ -1,16 +1,16 @@
 target "docker-metadata-action" {}
 
 variable "APP" {
-  default = "uptime-kuma"
+  default = "minio"
 }
 
 variable "VERSION" {
-  // renovate: datasource=docker depName=ghcr.io/louislam/uptime-kuma
-  default = "2.0.2"
+  // renovate: datasource=github-release depName=minio/minio
+  default = "RELEASE.2025-10-15T17-29-55Z"
 }
 
 variable "SOURCE" {
-  default = "https://github.com/louislam/uptime-kuma"
+  default = "https://github.com/minio/minio"
 }
 
 group "default" {
