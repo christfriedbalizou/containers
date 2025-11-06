@@ -1,6 +1,6 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
-  extends: ["github>christfried/renovate-config"],
+  extends: ["github>christfriedbalizou/renovate-config"],
   customManagers: [
     {
       customType: "regex",
@@ -12,10 +12,20 @@
       datasourceTemplate: "{{#if datasource}}{{{datasource}}}{{else}}github-releases{{/if}}",
       versioningTemplate: "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}",
     },
+    {
+      customType: "regex",
+      description: "Process Annotations in Dockerfiles",
+      managerFilePatterns: ["/(^|/)Dockerfile$/"],
+      matchStrings: [
+        "datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)( versioning=(?<versioning>\\S+))?\\n.+(:\\s|=)(&\\S+\\s)?(?<currentValue>\\S+)",
+      ],
+      datasourceTemplate: "{{#if datasource}}{{{datasource}}}{{else}}github-releases{{/if}}",
+      versioningTemplate: "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}",
+    },
   ],
   packageRules: [
     {
-      description: ["Release Rules for Application Updates"],
+      description: ["Release Rules for App Updates"],
       addLabels: ["app/{{parentDir}}"],
       additionalBranchPrefix: "{{parentDir}}-",
       commitMessageExtra: "( {{currentVersion}} → {{newVersion}} )",
@@ -25,7 +35,7 @@
       semanticCommitType: "release",
     },
     {
-      description: ["Auto-merge Application Updates"],
+      description: ["Auto-merge App Updates"],
       matchFileNames: ["**/docker-bake.hcl"],
       automerge: true,
       automergeType: "pr",
@@ -35,7 +45,7 @@
       description: ["Allowed Ubuntu Version for Base Images"],
       matchDatasources: ["docker"],
       matchPackageNames: ["/ubuntu/"],
-      allowedVersions: "/20\\.04/",
+      allowedVersions: "/24\\.04/",
     },
     {
       description: ["Allowed Alpine Version for Base Images"],
@@ -50,6 +60,13 @@
       matchFileNames: ["**/Dockerfile"],
       matchPackageNames: ["/python/"],
       allowedVersions: "/3\\.13-alpine3\\.22/",
-    }
+    },
+    {
+      description: ["Allowed Java Version for NZBHydra2 Base Image"],
+      matchDatasources: ["docker"],
+      matchFileNames: ["apps/nzbhydra2/Dockerfile"],
+      matchPackageNames: ["/amazoncorretto/"],
+      allowedVersions: "/17-alpine3\\.22/",
+    },
   ],
 }
