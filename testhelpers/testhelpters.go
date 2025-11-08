@@ -23,7 +23,8 @@ func GetTestImage(defaultImage string) string {
 
 // ContainerConfig holds optional container configuration
 type ContainerConfig struct {
-	Env map[string]string // Environment variables to set in the container
+	Env   map[string]string // Environment variables to set in the container
+	Tmpfs []string          // Tmpfs mounts to add to the container (e.g., []string{"/data", "/tmp"})
 }
 
 // applyContainerConfig applies optional container configuration
@@ -37,6 +38,13 @@ func applyContainerConfig(config *ContainerConfig) []testcontainers.ContainerCus
 	// Apply environment variables
 	if len(config.Env) > 0 {
 		opts = append(opts, testcontainers.WithEnv(config.Env))
+	}
+
+	// Apply tmpfs mounts
+	if len(config.Tmpfs) > 0 {
+		for _, tmpfsMount := range config.Tmpfs {
+			opts = append(opts, testcontainers.WithTmpfs(map[string]string{tmpfsMount: ""}))
+		}
 	}
 
 	return opts
