@@ -11,6 +11,10 @@ on:
       - .renovate/**.json5
   workflow_dispatch:
 
+permissions:
+  contents: write
+  actions: read
+  
 jobs:
   renovate:
     name: Renovate
