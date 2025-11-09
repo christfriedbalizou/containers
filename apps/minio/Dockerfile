@@ -32,4 +32,3 @@ VOLUME ["/data"]
 EXPOSE 9000 9001
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["minio","server","/data","--console-address=:9001"]
