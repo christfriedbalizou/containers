@@ -1,0 +1,17 @@
+schemaVersion: 2.0.0
+
+commandTests:
+  - name: code-server is available
+    command: code-server
+    args: ["--version"]
+    expectedOutput: [".+"]
+
+fileExistenceTests:
+  - name: defaults directory exists
+    path: /opt/code-server-defaults
+    shouldExist: true
+
+metadataTest:
+  exposedPorts: ["8080"]
+  user: "65534:65534"
+  workdir: "/workspace"
