@@ -35,11 +35,25 @@
       semanticCommitType: "release",
     },
     {
-      description: ["Auto-merge App Updates"],
-      matchFileNames: ["**/docker-bake.hcl"],
+      description: ["Auto-merge Non-Major Updates"],
+      matchUpdateTypes: [
+        "minor",
+        "patch",
+        "pin",
+        "digest",
+        "pinDigest",
+        "lockFileMaintenance",
+        "rollback",
+        "replacement",
+      ],
       automerge: true,
       automergeType: "pr",
       ignoreTests: false,
+    },
+    {
+      description: ["Do Not Auto-merge Major Updates"],
+      matchUpdateTypes: ["major"],
+      automerge: false,
     },
     {
       description: ["Allowed Ubuntu Version for Base Images"],
