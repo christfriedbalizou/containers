@@ -6,6 +6,8 @@ set -eu
 : "${CODE_SERVER_DEFAULTS_DIR:=/opt/code-server-defaults}"
 : "${CODE_SERVER_USER_DATA_DIR:=/config/data}"
 : "${CODE_SERVER_EXTENSIONS_DIR:=/config/extensions}"
+: "${GIT_USER_NAME:=}"
+: "${GIT_USER_EMAIL:=}"
 
 if [ "${CODE_SERVER_AUTH}" = "password" ] \
   && [ -z "${PASSWORD:-}" ] \
@@ -16,6 +18,16 @@ fi
 
 mkdir -p "${CODE_SERVER_USER_DATA_DIR}/User" "${CODE_SERVER_EXTENSIONS_DIR}" /workspace
 
+if command -v git >/dev/null 2>&1; then
+  if [ -n "${GIT_USER_NAME}" ]; then
+    git config --global user.name "${GIT_USER_NAME}"
+  fi
+
+  if [ -n "${GIT_USER_EMAIL}" ]; then
+    git config --global user.email "${GIT_USER_EMAIL}"
+  fi
+fi
+
 if [ -f "${CODE_SERVER_DEFAULTS_DIR}/settings.json" ]; then
   cp "${CODE_SERVER_DEFAULTS_DIR}/settings.json" "${CODE_SERVER_USER_DATA_DIR}/User/settings.json"
 fi
@@ -23,10 +35,16 @@ fi
 if [ -f "${CODE_SERVER_DEFAULTS_DIR}/extensions.txt" ]; then
   while read -r extension; do
     [ -z "${extension}" ] && continue
-    code-server \
+    case "${extension}" in
+      \#*) continue ;;
+    esac
+
+    if ! code-server \
       --user-data-dir "${CODE_SERVER_USER_DATA_DIR}" \
       --extensions-dir "${CODE_SERVER_EXTENSIONS_DIR}" \
-      --install-extension "${extension}"
+      --install-extension "${extension}"; then
+      echo "Failed to install extension ${extension}; continuing." >&2
+    fi
   done < "${CODE_SERVER_DEFAULTS_DIR}/extensions.txt"
 fi
 

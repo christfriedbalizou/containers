@@ -4,7 +4,10 @@ FROM ghcr.io/coder/code-server:${CODE_SERVER_VERSION}
 
 USER root
 
-RUN mkdir -p /config/data/User /config/extensions /opt/code-server-defaults /workspace \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /config/data/User /config/extensions /opt/code-server-defaults /workspace \
     && chown -R nobody:nogroup /config /opt/code-server-defaults /workspace
 
 COPY --chmod=0755 entrypoint.sh /usr/local/bin/entrypoint.sh
