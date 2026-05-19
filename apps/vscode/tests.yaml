@@ -6,12 +6,26 @@ commandTests:
     args: ["--version"]
     expectedOutput: [".+"]
 
+  - name: mise is available
+    command: mise
+    args: ["--version"]
+    expectedOutput: [".+"]
+
+  - name: python3 is available
+    command: python3
+    args: ["--version"]
+    expectedOutput: ["Python 3"]
+
 fileExistenceTests:
   - name: defaults directory exists
     path: /opt/code-server-defaults
     shouldExist: true
 
+  - name: home directory exists
+    path: /home/coder
+    shouldExist: true
+
 metadataTest:
   exposedPorts: ["8080"]
-  user: "65534:65534"
+  user: "1000:1000"
   workdir: "/workspace"

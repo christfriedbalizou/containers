@@ -8,6 +8,7 @@ set -eu
 : "${CODE_SERVER_EXTENSIONS_DIR:=/config/extensions}"
 : "${GIT_USER_NAME:=}"
 : "${GIT_USER_EMAIL:=}"
+: "${HOME:=/home/coder}"
 
 if [ "${CODE_SERVER_AUTH}" = "password" ] \
   && [ -z "${PASSWORD:-}" ] \
@@ -16,7 +17,23 @@ if [ "${CODE_SERVER_AUTH}" = "password" ] \
   exit 1
 fi
 
-mkdir -p "${CODE_SERVER_USER_DATA_DIR}/User" "${CODE_SERVER_EXTENSIONS_DIR}" /workspace
+mkdir -p \
+  "${CODE_SERVER_USER_DATA_DIR}/User" \
+  "${CODE_SERVER_EXTENSIONS_DIR}" \
+  "${HOME}/.cache" \
+  "${HOME}/.config" \
+  "${HOME}/.local/share" \
+  /workspace
+
+touch "${HOME}/.bashrc" "${HOME}/.bash_profile"
+
+if ! grep -Fq 'mise activate bash' "${HOME}/.bashrc" 2>/dev/null; then
+  printf '%s\n' 'eval "$(mise activate bash)"' >> "${HOME}/.bashrc"
+fi
+
+if ! grep -Fq '. ~/.bashrc' "${HOME}/.bash_profile" 2>/dev/null; then
+  printf '%s\n' '[ -f ~/.bashrc ] && . ~/.bashrc' >> "${HOME}/.bash_profile"
+fi
 
 if command -v git >/dev/null 2>&1; then
   if [ -n "${GIT_USER_NAME}" ]; then

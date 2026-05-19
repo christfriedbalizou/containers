@@ -5,16 +5,33 @@ FROM ghcr.io/coder/code-server:${CODE_SERVER_VERSION}
 USER root
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends git \
+    && apt-get install -y --no-install-recommends \
+      bash \
+      ca-certificates \
+      curl \
+      git \
+      openssh-client \
+      python3 \
+      python3-pip \
+      python3-venv \
+      unzip \
+      xz-utils \
     && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p /config/data/User /config/extensions /opt/code-server-defaults /workspace \
-    && chown -R nobody:nogroup /config /opt/code-server-defaults /workspace
+    && curl -fsSL https://mise.run -o /tmp/mise-install.sh \
+    && MISE_INSTALL_PATH=/usr/local/bin/mise sh /tmp/mise-install.sh \
+    && rm -f /tmp/mise-install.sh \
+    && mkdir -p /config/data/User /config/extensions /home/coder /opt/code-server-defaults /workspace \
+    && chown -R coder:coder /config /home/coder /opt/code-server-defaults /workspace
 
 COPY --chmod=0755 entrypoint.sh /usr/local/bin/entrypoint.sh
 
-ENV HOME=/config \
-    XDG_DATA_HOME=/config/data \
-    XDG_CONFIG_HOME=/config \
+ENV HOME=/home/coder \
+    SHELL=/bin/bash \
+    XDG_CACHE_HOME=/home/coder/.cache \
+    XDG_CONFIG_HOME=/home/coder/.config \
+    XDG_DATA_HOME=/home/coder/.local/share \
+    MISE_TRUSTED_CONFIG_PATHS=/workspace:/home/coder \
+    PATH=/home/coder/.local/share/mise/shims:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     SERVICE_URL=https://open-vsx.org/vscode/gallery \
     ITEM_URL=https://open-vsx.org/vscode/item \
     CODE_SERVER_BIND_ADDR=0.0.0.0:8080 \
@@ -23,9 +40,9 @@ ENV HOME=/config \
     CODE_SERVER_USER_DATA_DIR=/config/data \
     CODE_SERVER_EXTENSIONS_DIR=/config/extensions
 
-USER 65534:65534
+USER 1000:1000
 WORKDIR /workspace
-VOLUME ["/config", "/workspace"]
+VOLUME ["/config", "/home/coder", "/workspace"]
 EXPOSE 8080
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
