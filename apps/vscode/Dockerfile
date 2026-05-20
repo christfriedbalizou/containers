@@ -10,6 +10,8 @@ RUN apt-get update \
       ca-certificates \
       curl \
       git \
+      nodejs \
+      npm \
       openssh-client \
       python3 \
       python3-pip \
@@ -20,6 +22,7 @@ RUN apt-get update \
     && curl -fsSL https://mise.run -o /tmp/mise-install.sh \
     && MISE_INSTALL_PATH=/usr/local/bin/mise sh /tmp/mise-install.sh \
     && rm -f /tmp/mise-install.sh \
+    && npm install -g @openai/codex@latest \
     && mkdir -p /config/data/User /config/extensions /home/coder /opt/code-server-defaults /workspace \
     && chown -R coder:coder /config /home/coder /opt/code-server-defaults /workspace
 
@@ -30,6 +33,7 @@ ENV HOME=/home/coder \
     XDG_CACHE_HOME=/home/coder/.cache \
     XDG_CONFIG_HOME=/home/coder/.config \
     XDG_DATA_HOME=/home/coder/.local/share \
+    CODEX_HOME=/home/coder/.codex \
     MISE_TRUSTED_CONFIG_PATHS=/workspace:/home/coder \
     PATH=/home/coder/.local/share/mise/shims:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     SERVICE_URL=https://open-vsx.org/vscode/gallery \

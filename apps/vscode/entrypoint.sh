@@ -6,9 +6,14 @@ set -eu
 : "${CODE_SERVER_DEFAULTS_DIR:=/opt/code-server-defaults}"
 : "${CODE_SERVER_USER_DATA_DIR:=/config/data}"
 : "${CODE_SERVER_EXTENSIONS_DIR:=/config/extensions}"
+: "${HOME:=/home/coder}"
+: "${CODEX_AUTO_LOGIN:=false}"
+: "${CODEX_HOME:=${HOME}/.codex}"
+: "${CODEX_UNSET_API_KEY_AFTER_LOGIN:=true}"
 : "${GIT_USER_NAME:=}"
 : "${GIT_USER_EMAIL:=}"
-: "${HOME:=/home/coder}"
+
+export CODEX_HOME
 
 if [ "${CODE_SERVER_AUTH}" = "password" ] \
   && [ -z "${PASSWORD:-}" ] \
@@ -20,6 +25,7 @@ fi
 mkdir -p \
   "${CODE_SERVER_USER_DATA_DIR}/User" \
   "${CODE_SERVER_EXTENSIONS_DIR}" \
+  "${CODEX_HOME}" \
   "${HOME}/.cache" \
   "${HOME}/.config" \
   "${HOME}/.local/share" \
@@ -63,6 +69,20 @@ if [ -f "${CODE_SERVER_DEFAULTS_DIR}/extensions.txt" ]; then
       echo "Failed to install extension ${extension}; continuing." >&2
     fi
   done < "${CODE_SERVER_DEFAULTS_DIR}/extensions.txt"
+fi
+
+if [ "${CODEX_AUTO_LOGIN}" = "true" ] && [ -n "${OPENAI_API_KEY:-}" ]; then
+  if command -v codex >/dev/null 2>&1; then
+    if printf '%s\n' "${OPENAI_API_KEY}" | codex login --with-api-key >/dev/null 2>&1; then
+      if [ "${CODEX_UNSET_API_KEY_AFTER_LOGIN}" = "true" ]; then
+        unset OPENAI_API_KEY
+      fi
+    else
+      echo "Failed to log Codex in with OPENAI_API_KEY; continuing." >&2
+    fi
+  else
+    echo "CODEX_AUTO_LOGIN=true but codex is not installed; continuing." >&2
+  fi
 fi
 
 if [ "$#" -eq 0 ]; then
