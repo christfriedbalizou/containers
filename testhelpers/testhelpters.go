@@ -90,10 +90,10 @@ func TestHTTPEndpoint(t *testing.T, ctx context.Context, image string, httpConfi
 	portTCP := nat.Port(portStr)
 
 	opts := []testcontainers.ContainerCustomizer{
-		testcontainers.WithExposedPorts(portStr),
+		testcontainers.WithExposedPorts(string(portTCP)),
 		testcontainers.WithWaitStrategy(
-			wait.ForListeningPort(portTCP),
-			wait.ForHTTP(httpConfig.Path).WithPort(portTCP).WithStatusCodeMatcher(func(status int) bool {
+			wait.ForListeningPort(string(portTCP)),
+			wait.ForHTTP(httpConfig.Path).WithPort(string(portTCP)).WithStatusCodeMatcher(func(status int) bool {
 				return status == httpConfig.StatusCode
 			}),
 		),
