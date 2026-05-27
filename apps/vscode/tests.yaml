@@ -11,6 +11,11 @@ commandTests:
     args: ["--version"]
     expectedOutput: [".+"]
 
+  - name: codex is available
+    command: codex
+    args: ["--version"]
+    expectedOutput: [".+"]
+
   - name: python3 is available
     command: python3
     args: ["--version"]

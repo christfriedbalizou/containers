@@ -9,6 +9,16 @@ variable "VERSION" {
   default = "4.118.0"
 }
 
+variable "CODEX_VERSION" {
+  // renovate: datasource=npm depName=@openai/codex
+  default = "0.132.0"
+}
+
+variable "MISE_VERSION" {
+  // renovate: datasource=github-release depName=jdx/mise
+  default = "v2026.5.12"
+}
+
 variable "SOURCE" {
   default = "https://github.com/coder/code-server"
 }
@@ -21,6 +31,8 @@ target "image" {
   inherits = ["docker-metadata-action"]
   args = {
     CODE_SERVER_VERSION = "${VERSION}"
+    CODEX_VERSION       = "${CODEX_VERSION}"
+    MISE_VERSION        = "${MISE_VERSION}"
   }
   labels = {
     "org.opencontainers.image.source" = "${SOURCE}"

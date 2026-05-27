@@ -1,6 +1,9 @@
-ARG CODE_SERVER_VERSION=4.121.0
+ARG CODE_SERVER_VERSION
 
 FROM ghcr.io/coder/code-server:${CODE_SERVER_VERSION}
+
+ARG CODEX_VERSION
+ARG MISE_VERSION
 
 USER root
 
@@ -20,9 +23,9 @@ RUN apt-get update \
       xz-utils \
     && rm -rf /var/lib/apt/lists/* \
     && curl -fsSL https://mise.run -o /tmp/mise-install.sh \
-    && MISE_INSTALL_PATH=/usr/local/bin/mise sh /tmp/mise-install.sh \
+    && MISE_VERSION=${MISE_VERSION} MISE_INSTALL_PATH=/usr/local/bin/mise sh /tmp/mise-install.sh \
     && rm -f /tmp/mise-install.sh \
-    && npm install -g @openai/codex@latest \
+    && npm install -g @openai/codex@${CODEX_VERSION} \
     && mkdir -p /config/data/User /config/extensions /home/coder /opt/code-server-defaults /workspace \
     && chown -R coder:coder /config /home/coder /opt/code-server-defaults /workspace
 
