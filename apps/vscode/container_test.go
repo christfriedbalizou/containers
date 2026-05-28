@@ -23,6 +23,7 @@ func Test(t *testing.T) {
 		{name: "code-server is available", command: "code-server", args: []string{"--version"}},
 		{name: "mise is available", command: "mise", args: []string{"--version"}},
 		{name: "codex is available", command: "codex", args: []string{"--version"}},
+		{name: "bubblewrap is available", command: "bwrap", args: []string{"--version"}},
 		{name: "python3 is available", command: "python3", args: []string{"--version"}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
