@@ -14,9 +14,11 @@ RUN apt-get update \
       ca-certificates \
       curl \
       git \
+      gosu \
       nodejs \
       npm \
       openssh-client \
+      passwd \
       python3 \
       python3-pip \
       python3-venv \
@@ -47,9 +49,11 @@ ENV HOME=/home/coder \
     CODE_SERVER_AUTH=password \
     CODE_SERVER_DEFAULTS_DIR=/opt/code-server-defaults \
     CODE_SERVER_USER_DATA_DIR=/config/data \
-    CODE_SERVER_EXTENSIONS_DIR=/config/extensions
+    CODE_SERVER_EXTENSIONS_DIR=/config/extensions \
+    PUID=1000 \
+    PGID=1000
 
-USER 1000:1000
+USER root
 WORKDIR /home/coder/src
 VOLUME ["/config", "/home/coder"]
 EXPOSE 8080

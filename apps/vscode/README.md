@@ -5,7 +5,14 @@ and extensions are expected to be mounted at runtime.
 
 ## Runtime
 
-The image runs as `1000:1000` (`coder:coder`) by default and only uses the
+The image runs as `root` briefly so it can map the `coder` user to `PUID` and
+`PGID`, then drops privileges before starting code-server. Both values default
+to `1000`.
+
+Set `PUID` and `PGID` in the container environment when the mounted host paths
+need a different owner, for example `PUID=1001` and `PGID=1001`.
+
+The container only uses the
 paths you mount into the container:
 
 - `/config` for code-server user data and installed extensions
@@ -18,16 +25,6 @@ Kubernetes, prefer a PVC or a narrow repository checkout volume.
 
 Set `PASSWORD` or `HASHED_PASSWORD` from a Secret unless you put the service
 behind another authenticated proxy and set `CODE_SERVER_AUTH=none`.
-
-Recommended pod security context:
-
-```yaml
-securityContext:
-  runAsNonRoot: true
-  runAsUser: 1000
-  runAsGroup: 1000
-  fsGroup: 1000
-```
 
 Recommended container security context:
 

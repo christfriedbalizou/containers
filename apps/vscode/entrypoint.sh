@@ -13,14 +13,61 @@ set -eu
 : "${CODEX_UNSET_API_KEY_AFTER_LOGIN:=true}"
 : "${GIT_USER_NAME:=}"
 : "${GIT_USER_EMAIL:=}"
+: "${PUID:=1000}"
+: "${PGID:=1000}"
 
 export CODEX_HOME
+
+case "${PUID}" in
+  "" | *[!0-9]*)
+    echo "PUID and PGID must be numeric." >&2
+    exit 1
+    ;;
+esac
+
+case "${PGID}" in
+  "" | *[!0-9]*)
+    echo "PUID and PGID must be numeric." >&2
+    exit 1
+    ;;
+esac
 
 if [ "${CODE_SERVER_AUTH}" = "password" ] \
   && [ -z "${PASSWORD:-}" ] \
   && [ -z "${HASHED_PASSWORD:-}" ]; then
   echo "Set PASSWORD or HASHED_PASSWORD when CODE_SERVER_AUTH=password." >&2
   exit 1
+fi
+
+if [ "$(id -u)" -eq 0 ]; then
+  current_gid="$(id -g coder)"
+  current_uid="$(id -u coder)"
+
+  if [ "${current_gid}" != "${PGID}" ]; then
+    groupmod -o -g "${PGID}" coder
+  fi
+
+  if [ "${current_uid}" != "${PUID}" ]; then
+    usermod -o -u "${PUID}" coder
+  fi
+
+  mkdir -p \
+    "${CODE_SERVER_USER_DATA_DIR}/User" \
+    "${CODE_SERVER_EXTENSIONS_DIR}" \
+    "${CODEX_HOME}" \
+    "${HOME}/.cache" \
+    "${HOME}/.config" \
+    "${HOME}/.local/share" \
+    "${CODE_SERVER_WORKSPACE_DIR}"
+
+  chown -R coder:coder \
+    "${CODE_SERVER_USER_DATA_DIR}" \
+    "${CODE_SERVER_EXTENSIONS_DIR}" \
+    "${CODEX_HOME}" \
+    "${HOME}" \
+    "${CODE_SERVER_WORKSPACE_DIR}"
+
+  exec gosu coder "$0" "$@"
 fi
 
 mkdir -p \
@@ -50,6 +97,14 @@ if command -v git >/dev/null 2>&1; then
   if [ -n "${GIT_USER_EMAIL}" ]; then
     git config --global user.email "${GIT_USER_EMAIL}"
   fi
+
+  find "${CODE_SERVER_WORKSPACE_DIR}" -mindepth 2 -maxdepth 5 -type d -name .git 2>/dev/null \
+    | while IFS= read -r git_dir; do
+      repo_dir="$(dirname "${git_dir}")"
+      if ! git config --global --get-all safe.directory | grep -Fxq "${repo_dir}"; then
+        git config --global --add safe.directory "${repo_dir}"
+      fi
+    done
 fi
 
 if [ -f "${CODE_SERVER_DEFAULTS_DIR}/settings.json" ]; then
