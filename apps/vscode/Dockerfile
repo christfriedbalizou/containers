@@ -27,8 +27,8 @@ RUN apt-get update \
     && MISE_VERSION=${MISE_VERSION} MISE_INSTALL_PATH=/usr/local/bin/mise sh /tmp/mise-install.sh \
     && rm -f /tmp/mise-install.sh \
     && npm install -g @openai/codex@${CODEX_VERSION} \
-    && mkdir -p /config/data/User /config/extensions /home/coder /opt/code-server-defaults /workspace \
-    && chown -R coder:coder /config /home/coder /opt/code-server-defaults /workspace
+    && mkdir -p /config/data/User /config/extensions /home/coder/src /opt/code-server-defaults \
+    && chown -R coder:coder /config /home/coder /opt/code-server-defaults
 
 COPY --chmod=0755 entrypoint.sh /usr/local/bin/entrypoint.sh
 
@@ -38,7 +38,8 @@ ENV HOME=/home/coder \
     XDG_CONFIG_HOME=/home/coder/.config \
     XDG_DATA_HOME=/home/coder/.local/share \
     CODEX_HOME=/home/coder/.codex \
-    MISE_TRUSTED_CONFIG_PATHS=/workspace:/home/coder \
+    CODE_SERVER_WORKSPACE_DIR=/home/coder/src \
+    MISE_TRUSTED_CONFIG_PATHS=/home/coder/src:/home/coder \
     PATH=/home/coder/.local/share/mise/shims:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     SERVICE_URL=https://open-vsx.org/vscode/gallery \
     ITEM_URL=https://open-vsx.org/vscode/item \
@@ -49,8 +50,8 @@ ENV HOME=/home/coder \
     CODE_SERVER_EXTENSIONS_DIR=/config/extensions
 
 USER 1000:1000
-WORKDIR /workspace
-VOLUME ["/config", "/home/coder", "/workspace"]
+WORKDIR /home/coder/src
+VOLUME ["/config", "/home/coder"]
 EXPOSE 8080
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

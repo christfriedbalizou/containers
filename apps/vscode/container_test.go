@@ -47,7 +47,7 @@ func Test(t *testing.T) {
 		config := inspectImageConfig(t, image)
 
 		require.Equal(t, "1000:1000", config.User)
-		require.Equal(t, "/workspace", config.WorkingDir)
+		require.Equal(t, "/home/coder/src", config.WorkingDir)
 		require.Contains(t, config.ExposedPorts, "8080/tcp")
 	})
 }

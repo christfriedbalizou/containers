@@ -7,6 +7,7 @@ set -eu
 : "${CODE_SERVER_USER_DATA_DIR:=/config/data}"
 : "${CODE_SERVER_EXTENSIONS_DIR:=/config/extensions}"
 : "${HOME:=/home/coder}"
+: "${CODE_SERVER_WORKSPACE_DIR:=${HOME}/src}"
 : "${CODEX_AUTO_LOGIN:=false}"
 : "${CODEX_HOME:=${HOME}/.codex}"
 : "${CODEX_UNSET_API_KEY_AFTER_LOGIN:=true}"
@@ -29,7 +30,7 @@ mkdir -p \
   "${HOME}/.cache" \
   "${HOME}/.config" \
   "${HOME}/.local/share" \
-  /workspace
+  "${CODE_SERVER_WORKSPACE_DIR}"
 
 touch "${HOME}/.bashrc" "${HOME}/.bash_profile"
 
@@ -91,7 +92,7 @@ if [ "$#" -eq 0 ]; then
     --auth "${CODE_SERVER_AUTH}" \
     --user-data-dir "${CODE_SERVER_USER_DATA_DIR}" \
     --extensions-dir "${CODE_SERVER_EXTENSIONS_DIR}" \
-    /workspace
+    "${CODE_SERVER_WORKSPACE_DIR}"
 else
   exec code-server \
     --user-data-dir "${CODE_SERVER_USER_DATA_DIR}" \
