@@ -56,6 +56,11 @@
       automerge: false,
     },
     {
+      description: ["Do Not Use Floating Docker Tags"],
+      matchDatasources: ["docker"],
+      allowedVersions: "!/^(latest)$/",
+    },
+    {
       description: ["Allowed Ubuntu Version for Base Images"],
       matchDatasources: ["docker"],
       matchPackageNames: ["/ubuntu/"],

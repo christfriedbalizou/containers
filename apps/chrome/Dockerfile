@@ -1,6 +1,6 @@
 ARG VERSION
 
-FROM lscr.io/linuxserver/chromium:${VERSION}
+FROM lscr.io/linuxserver/chrome:${VERSION}
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \

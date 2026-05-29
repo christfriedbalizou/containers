@@ -1,16 +1,16 @@
 target "docker-metadata-action" {}
 
 variable "APP" {
-  default = "chromium"
+  default = "chrome"
 }
 
 variable "VERSION" {
-  // renovate: datasource=docker depName=linuxserver/chromium
-  default = "b0ddd401-ls35"
+  // renovate: datasource=docker depName=linuxserver/chrome versioning=loose
+  default = "148.0.7778.178-1-ls95"
 }
 
 variable "SOURCE" {
-  default = "https://github.com/linuxserver/docker-chromium"
+  default = "https://github.com/linuxserver/docker-chrome"
 }
 
 group "default" {
@@ -36,7 +36,6 @@ target "image-local" {
 target "image-all" {
   inherits = ["image"]
   platforms = [
-    "linux/amd64",
-    "linux/arm64"
+    "linux/amd64"
   ]
 }
