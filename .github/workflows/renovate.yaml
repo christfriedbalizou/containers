@@ -6,11 +6,12 @@ on:
   push:
     branches:
       - main
-    paths:
-      - .renovaterc.json5
-      - .renovate/**.json5
   workflow_dispatch:
-  
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.repository }}
+  cancel-in-progress: true
+
 jobs:
   renovate:
     name: Renovate
@@ -23,6 +24,25 @@ jobs:
           app-id: ${{ secrets.BOT_APP_ID }}
           private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
+
+      - name: Close Duplicate Renovate Dashboards
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: |-
+          BOT_LOGIN=$(gh api user --jq ".login")
+          gh api "repos/${REPOSITORY}/issues" \
+              --method GET \
+              --paginate \
+              --field state=open \
+              --field per_page=100 \
+              --jq ".[] | select(.pull_request | not) | select(.title | startswith(\"Renovate Dashboard\")) | select(.user.login != \"${BOT_LOGIN}\") | .number" \
+            | while read -r issue_number; do
+                gh issue close "${issue_number}" \
+                  --repo "${REPOSITORY}" \
+                  --reason "not planned" \
+                  --comment "Closing duplicate Renovate dashboard; this repository uses the push-triggered self-hosted Renovate workflow."
+              done
 
       - name: Run Renovate
         uses: codex-/return-dispatch@16fa9d14771c4d56ae0196bbda1d3c17f7f3650f # v3.0.2
