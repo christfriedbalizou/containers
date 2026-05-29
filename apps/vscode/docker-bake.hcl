@@ -6,7 +6,7 @@ variable "APP" {
 
 variable "VERSION" {
   // renovate: datasource=github-release depName=coder/code-server
-  default = "4.118.0"
+  default = "4.122.0"
 }
 
 variable "CODEX_VERSION" {
