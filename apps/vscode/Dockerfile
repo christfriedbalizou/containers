@@ -14,7 +14,6 @@ RUN apt-get update \
       ca-certificates \
       curl \
       git \
-      gosu \
       nodejs \
       npm \
       openssh-client \
@@ -29,8 +28,9 @@ RUN apt-get update \
     && MISE_VERSION=${MISE_VERSION} MISE_INSTALL_PATH=/usr/local/bin/mise sh /tmp/mise-install.sh \
     && rm -f /tmp/mise-install.sh \
     && npm install -g @openai/codex@${CODEX_VERSION} \
+    && usermod -o -u 1024 -g 101 coder \
     && mkdir -p /config/data/User /config/extensions /home/coder/src /opt/code-server-defaults \
-    && chown -R coder:coder /config /home/coder /opt/code-server-defaults
+    && chown -R 1024:101 /config /home/coder /opt/code-server-defaults
 
 COPY --chmod=0755 entrypoint.sh /usr/local/bin/entrypoint.sh
 
@@ -49,11 +49,9 @@ ENV HOME=/home/coder \
     CODE_SERVER_AUTH=password \
     CODE_SERVER_DEFAULTS_DIR=/opt/code-server-defaults \
     CODE_SERVER_USER_DATA_DIR=/config/data \
-    CODE_SERVER_EXTENSIONS_DIR=/config/extensions \
-    PUID=1000 \
-    PGID=1000
+    CODE_SERVER_EXTENSIONS_DIR=/config/extensions
 
-USER root
+USER 1024:101
 WORKDIR /home/coder/src
 VOLUME ["/config", "/home/coder"]
 EXPOSE 8080

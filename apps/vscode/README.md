@@ -5,14 +5,7 @@ and extensions are expected to be mounted at runtime.
 
 ## Runtime
 
-The image runs as `root` briefly so it can map the `coder` user to `PUID` and
-`PGID`, then drops privileges before starting code-server. Both values default
-to `1000`.
-
-Set `PUID` and `PGID` in the container environment when the mounted host paths
-need a different owner, for example `PUID=1001` and `PGID=1001`.
-
-The container only uses the
+The image runs as `1024:101` by default and only uses the
 paths you mount into the container:
 
 - `/config` for code-server user data and installed extensions
@@ -34,5 +27,5 @@ securityContext:
   capabilities:
     drop:
       - ALL
-  readOnlyRootFilesystem: false
+  readOnlyRootFilesystem: true
 ```
