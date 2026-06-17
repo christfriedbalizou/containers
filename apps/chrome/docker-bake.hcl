@@ -6,7 +6,7 @@ variable "APP" {
 
 variable "VERSION" {
   // renovate: datasource=docker depName=linuxserver/chrome versioning=loose
-  default = "148.0.7778.215-1-ls96"
+  default = "149.0.7827.155-1-ls100"
 }
 
 variable "SOURCE" {
