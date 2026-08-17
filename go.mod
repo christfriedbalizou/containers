@@ -4,7 +4,7 @@ go 1.25.1
 
 require (
 	github.com/docker/go-connections v0.8.1
-	github.com/stretchr/testify v1.11.1
+	github.com/stretchr/testify v1.12.0
 	github.com/testcontainers/testcontainers-go v0.44.0
 )
 
