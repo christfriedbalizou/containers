@@ -4,7 +4,7 @@
 "aqua:evilmartians/lefthook" = "2.1.12"
 "aqua:jqlang/jq" = "1.8.1"
 "aqua:mikefarah/yq" = "4.53.6"
-"go" = "1.27.0"
+"go" = "1.27.1"
 
 [hooks]
 postinstall = [
