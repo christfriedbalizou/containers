@@ -3,7 +3,7 @@
 FROM --platform=$BUILDPLATFORM golang:1.27-alpine@sha256:cf6fca6641884b8433441b2b0652976f975e1d0fdd26d177eaaf8596087f3125 AS builder
 
 ARG VERSION
-ARG SILO_REVISION
+ARG SILO_TAG
 ARG TARGETOS
 ARG TARGETARCH
 
@@ -13,13 +13,17 @@ RUN --mount=type=secret,id=build_ca \
     if [ -f /run/secrets/build_ca ]; then cat /run/secrets/build_ca >> /etc/ssl/certs/ca-certificates.crt; fi \
     && apk add --no-cache git
 
-# Fetch immutable source revisions, never a moving branch at build time.
-RUN test -n "$VERSION" && test "${#SILO_REVISION}" -eq 40 \
+# Fetch a published release tag, never a moving branch at build time.
+RUN test -n "$VERSION" && test -n "$SILO_TAG" \
+    && case "$SILO_TAG" in \
+        RELEASE\.[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]-[0-9][0-9]-[0-9][0-9]Z) ;; \
+        *) echo 'SILO_TAG must be a published RELEASE.YYYY-MM-DDTHH-MM-SSZ tag.' >&2; exit 1 ;; \
+    esac \
     && git init . \
     && git remote add origin https://github.com/pgsty/silo.git \
-    && git fetch --depth=1 origin "$SILO_REVISION" \
-    && git checkout --detach FETCH_HEAD \
-    && test "$(git rev-parse HEAD)" = "$SILO_REVISION"
+    && git fetch --depth=1 origin "refs/tags/${SILO_TAG}:refs/tags/${SILO_TAG}" \
+    && git checkout --detach "refs/tags/${SILO_TAG}^{commit}" \
+    && test "$(git describe --tags --exact-match HEAD)" = "$SILO_TAG"
 
 RUN --mount=type=cache,target=/go/pkg/mod \
     go mod download && go mod verify
@@ -32,7 +36,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     && cp NOTICE /out/licenses/silo.NOTICE \
     && cp CREDITS /out/licenses/silo.CREDITS \
     && cp go.mod go.sum /out/build/ \
-    && printf 'image=%s\nsilo=%s\n' "$VERSION" "$SILO_REVISION" > /out/build/revisions
+    && printf 'image=%s\nsilo_tag=%s\nsilo_commit=%s\n' "$VERSION" "$SILO_TAG" "$(git rev-parse HEAD)" > /out/build/revisions
 
 FROM alpine:3.22@sha256:14358309a308569c32bdc37e2e0e9694be33a9d99e68afb0f5ff33cc1f695dce
 RUN --mount=type=secret,id=build_ca \

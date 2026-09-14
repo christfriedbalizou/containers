@@ -14,15 +14,6 @@
     },
     {
       customType: "regex",
-      description: "Process pinned Git revisions in Docker Bake",
-      managerFilePatterns: ["/(^|/)docker-bake\\.hcl$/"],
-      matchStrings: [
-        "datasource=git-refs depName=(?<depName>\\S+) packageName=(?<packageName>\\S+) currentValue=(?<currentValue>\\S+)\\n\\s*default = \\\"(?<currentDigest>[a-f0-9]{40})\\\"",
-      ],
-      datasourceTemplate: "git-refs",
-    },
-    {
-      customType: "regex",
       description: "Process Annotations in Dockerfiles",
       managerFilePatterns: ["/(^|/)Dockerfile$/"],
       matchStrings: [
@@ -65,9 +56,9 @@
       automerge: false,
     },
     {
-      description: ["Require review for Silo source revisions"],
-      matchDatasources: ["git-refs"],
-      matchPackageNames: ["pgsty/silo", "https://github.com/pgsty/silo"],
+      description: ["Require review for Silo release tags"],
+      matchDatasources: ["github-releases"],
+      matchPackageNames: ["pgsty/silo"],
       automerge: false,
     },
     {

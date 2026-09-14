@@ -5,13 +5,9 @@ variable "APP" {
 }
 
 variable "VERSION" {
-  // This is the date of the pinned Silo main revision below.
-  default = "2026.9.13"
-}
-
-variable "SILO_REVISION" {
-  // renovate: datasource=git-refs depName=pgsty/silo packageName=https://github.com/pgsty/silo currentValue=main
-  default = "89637554d60c27cfc51d2281d0a4fe15e415f06d"
+  // Pin the image and source to the same published Silo release.
+  // renovate: datasource=github-releases depName=pgsty/silo versioning=loose
+  default = "RELEASE.2026-09-03T13-18-01Z"
 }
 
 variable "SOURCE" {
@@ -26,13 +22,13 @@ target "image" {
   inherits = ["docker-metadata-action"]
   args = {
     VERSION = "${VERSION}"
-    SILO_REVISION = "${SILO_REVISION}"
+    SILO_TAG = "${VERSION}"
   }
   labels = {
     "org.opencontainers.image.source" = "${SOURCE}"
     "org.opencontainers.image.licenses" = "AGPL-3.0-or-later"
     "io.silo.source" = "https://github.com/pgsty/silo"
-    "io.silo.revision" = "${SILO_REVISION}"
+    "io.silo.tag" = "${VERSION}"
   }
 }
 

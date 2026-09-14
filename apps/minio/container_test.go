@@ -17,7 +17,6 @@ func Test(t *testing.T) {
 			"MINIO_ROOT_USER":     "testadmin",
 			"MINIO_ROOT_PASSWORD": "test-password-please-change",
 		},
-		Tmpfs: []string{"/data"},
 	}
 
 	healthCheck := testhelpers.HTTPTestConfig{
