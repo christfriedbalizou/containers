@@ -5,12 +5,17 @@ variable "APP" {
 }
 
 variable "VERSION" {
-  // renovate: datasource=github-release depName=minio/minio
-  default = "RELEASE.2025-10-15T17-29-55Z"
+  // This is the date of the pinned Silo main revision below.
+  default = "2026.9.13"
+}
+
+variable "SILO_REVISION" {
+  // renovate: datasource=git-refs depName=pgsty/silo packageName=https://github.com/pgsty/silo currentValue=main
+  default = "89637554d60c27cfc51d2281d0a4fe15e415f06d"
 }
 
 variable "SOURCE" {
-  default = "https://github.com/minio/minio"
+  default = "https://github.com/pgsty/silo"
 }
 
 group "default" {
@@ -21,9 +26,13 @@ target "image" {
   inherits = ["docker-metadata-action"]
   args = {
     VERSION = "${VERSION}"
+    SILO_REVISION = "${SILO_REVISION}"
   }
   labels = {
     "org.opencontainers.image.source" = "${SOURCE}"
+    "org.opencontainers.image.licenses" = "AGPL-3.0-or-later"
+    "io.silo.source" = "https://github.com/pgsty/silo"
+    "io.silo.revision" = "${SILO_REVISION}"
   }
 }
 

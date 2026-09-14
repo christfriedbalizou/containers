@@ -12,6 +12,11 @@ func Test(t *testing.T) {
 	image := testhelpers.GetTestImage("ghcr.io/christfriedbalizou/minio:rolling")
 
 	containerConfig := &testhelpers.ContainerConfig{
+		Env: map[string]string{
+			// The image deliberately refuses MinIO's default credentials.
+			"MINIO_ROOT_USER":     "testadmin",
+			"MINIO_ROOT_PASSWORD": "test-password-please-change",
+		},
 		Tmpfs: []string{"/data"},
 	}
 
@@ -22,4 +27,11 @@ func Test(t *testing.T) {
 	}
 
 	testhelpers.TestHTTPEndpoint(t, ctx, image, healthCheck, containerConfig)
+
+	consoleCheck := testhelpers.HTTPTestConfig{
+		Port:       "9001",
+		Path:       "/",
+		StatusCode: 200,
+	}
+	testhelpers.TestHTTPEndpoint(t, ctx, image, consoleCheck, containerConfig)
 }
