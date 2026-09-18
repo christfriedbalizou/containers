@@ -38,7 +38,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     && cp go.mod go.sum /out/build/ \
     && printf 'image=%s\nsilo_tag=%s\nsilo_commit=%s\n' "$VERSION" "$SILO_TAG" "$(git rev-parse HEAD)" > /out/build/revisions
 
-FROM alpine:3.22@sha256:14358309a308569c32bdc37e2e0e9694be33a9d99e68afb0f5ff33cc1f695dce
+FROM alpine:3.22@sha256:365499d9dccb7c8cfaffef995a6c382e71174585e0556f6476ead1c5971c39fb
 RUN --mount=type=secret,id=build_ca \
     cat /etc/ssl/certs/ca-certificates.crt > /tmp/build-ca.pem \
     && if [ -f /run/secrets/build_ca ]; then cat /run/secrets/build_ca >> /tmp/build-ca.pem; fi \
