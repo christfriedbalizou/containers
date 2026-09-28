@@ -1,0 +1,47 @@
+# syntax=docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
+
+FROM node:24.21.0-bookworm-slim@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6 AS frontend
+WORKDIR /src
+COPY --from=translator-source package.json package-lock.json ./
+RUN --mount=type=cache,target=/root/.npm npm ci
+COPY --from=translator-source . .
+RUN npm run build
+
+FROM ghcr.io/astral-sh/uv:0.12.13@sha256:b485bd65cc2cf1c9a93b3554012c9c3778cf7b1b5fd3d3096ce9e1226c97e1e6 AS uv
+
+FROM python:3.12.14-slim-bookworm@sha256:392307d22300de8b5986851a12d9176dfc0fc073e65bf6523ebd7dcbeb23564e AS python-base
+
+FROM python-base AS backend
+COPY --from=uv /uv /usr/local/bin/uv
+ENV UV_PYTHON_DOWNLOADS=never UV_LINK_MODE=copy
+WORKDIR /opt/translator
+COPY --from=translator-source . .
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --no-dev --no-editable
+
+FROM python-base AS runtime
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates libgomp1 libseccomp2 libstdc++6 \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --gid 1000 translator \
+    && useradd --uid 1000 --gid 1000 --no-create-home --home-dir /tmp/translator translator \
+    && install -d -o 1000 -g 1000 /data /tmp/translator
+
+ENV PATH="/opt/translator/.venv/bin:${PATH}" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    HOME=/tmp/translator
+WORKDIR /opt/translator
+COPY --from=backend /opt/translator/.venv ./.venv
+COPY --from=frontend /src/dist ./dist
+COPY --from=translator-source alembic.ini LICENSE ./
+COPY --from=translator-source migrations ./migrations
+COPY --from=translator-source .source-revision /usr/share/translator/source-revision
+COPY --chmod=0755 entrypoint.sh /usr/local/bin/entrypoint.sh
+
+ARG VERSION
+RUN test -n "$VERSION" && printf '%s\n' "$VERSION" > /usr/share/translator/source-tag
+USER 1000:1000
+EXPOSE 8000
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["api"]
