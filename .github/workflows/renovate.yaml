@@ -9,6 +9,8 @@ on:
     paths:
       - .renovaterc.json5
       - .renovate/**.json5
+  schedule:
+    - cron: "23 */6 * * *"
   workflow_dispatch:
 
 permissions: {}
