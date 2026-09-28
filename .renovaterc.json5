@@ -28,7 +28,14 @@
       description: ["Translator release tags from private Forgejo"],
       matchDatasources: ["forgejo-tags"],
       matchPackageNames: ["christfried.balizou/translator"],
-      registryUrls: ["https://git.${SECRET_DOMAIN}"],
+      // The private registry URL is supplied by the shared runner from SECRET_DOMAIN.
+      sourceUrl: "https://github.com/christfriedbalizou/containers",
+      sourceDirectory: "apps/translator",
+      fetchChangeLogs: "off",
+      prBodyDefinitions: {
+        Package: "`{{{depName}}}`",
+        Change: "`{{{currentValue}}}` → `{{{newValue}}}`",
+      },
       allowedVersions: "/^v[0-9]+\\.[0-9]+\\.[0-9]+$/",
     },
     {

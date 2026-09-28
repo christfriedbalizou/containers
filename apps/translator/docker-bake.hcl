@@ -10,7 +10,8 @@ variable "VERSION" {
 }
 
 variable "SOURCE" {
-  default = "https://git.${SECRET_DOMAIN}/christfried.balizou/translator"
+  // Public packaging source. Private checkout uses SECRET_DOMAIN in the runner.
+  default = "https://github.com/christfriedbalizou/containers"
 }
 
 variable "SOURCE_DIR" {

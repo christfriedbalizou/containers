@@ -19,6 +19,11 @@ a `forgejo-tags` host rule; repository secrets are not inherited across the
 dispatch boundary. The existing Renovate schedule/dispatch discovers new tags.
 The `Renovate` workflow here can trigger a scan manually.
 
+The private hostname is resolved only in the authenticated runners from
+`SECRET_DOMAIN`; it is not stored in Bake or repository Renovate configuration.
+Published image labels point to this public packaging repository. Renovate
+version updates omit private source links and changelogs from their PR bodies.
+
 Renovate opens an update to `VERSION`. Existing policy automatically merges
 minor/patch updates after checks pass; majors require review. Merging the update
 triggers a release build. PR builds publish `sandbox` for smoke testing.
