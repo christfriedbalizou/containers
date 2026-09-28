@@ -37,7 +37,8 @@ Export the three secrets into the shell without adding them to tracked files:
 
 ```sh
 cd apps/translator
-bash fetch-source.sh v0.2.0 source
+version=$(docker buildx bake --list type=variables,format=json | jq -r '.[] | select(.name == "VERSION") | .value')
+bash fetch-source.sh "$version" source
 docker buildx bake image-local
 ```
 
