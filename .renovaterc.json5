@@ -25,6 +25,13 @@
   ],
   packageRules: [
     {
+      description: ["Translator release tags from private Forgejo"],
+      matchDatasources: ["forgejo-tags"],
+      matchPackageNames: ["christfried.balizou/translator"],
+      registryUrls: ["https://git.${SECRET_DOMAIN}"],
+      allowedVersions: "/^v[0-9]+\\.[0-9]+\\.[0-9]+$/",
+    },
+    {
       description: ["Release Rules for App Updates"],
       addLabels: ["app/{{parentDir}}"],
       additionalBranchPrefix: "{{parentDir}}-",
@@ -85,6 +92,13 @@
       matchFileNames: ["**/Dockerfile"],
       matchPackageNames: ["/python/"],
       allowedVersions: "/3\\.13-alpine3\\.22/",
+    },
+    {
+      description: ["Translator requires Python 3.12 on glibc"],
+      matchDatasources: ["docker"],
+      matchFileNames: ["apps/translator/Dockerfile"],
+      matchPackageNames: ["python"],
+      allowedVersions: "/^3\\.12\\.[0-9]+-slim-bookworm$/",
     }
   ],
 }

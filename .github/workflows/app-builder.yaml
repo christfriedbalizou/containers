@@ -118,6 +118,16 @@ jobs:
         run: |-
           rsync -a --ignore-existing --progress ./include/ ./apps/${{ inputs.app }}/
 
+      - name: Fetch Translator Release
+        if: ${{ inputs.app == 'translator' }}
+        id: translator-source
+        env:
+          SECRET_DOMAIN: ${{ secrets.SECRET_DOMAIN }}
+          FORGEJO_USERNAME: ${{ secrets.FORGEJO_USERNAME }}
+          FORGEJO_ACCESS_TOKEN: ${{ secrets.FORGEJO_ACCESS_TOKEN }}
+          VERSION: ${{ steps.app-options.outputs.version }}
+        run: bash apps/translator/fetch-source.sh "$VERSION" apps/translator/source
+
       - name: Build App
         uses: docker/bake-action@018cb6412ab401ebaa809aa5f85966b74628600f # v7.4.0
         id: bake
@@ -132,7 +142,7 @@ jobs:
             *.labels.org.opencontainers.image.title=${{ inputs.app }}
             *.labels.org.opencontainers.image.url=https://ghcr.io/${{ github.repository_owner }}/${{ inputs.app }}
             *.labels.org.opencontainers.image.version=${{ steps.app-options.outputs.version }}
-            *.labels.org.opencontainers.image.revision=${{ github.sha }}
+            *.labels.org.opencontainers.image.revision=${{ steps.translator-source.outputs.revision || github.sha }}
             *.labels.org.opencontainers.image.vendor=${{ github.repository_owner }}
             *.output=type=image,name=ghcr.io/${{ github.repository_owner }}/${{ inputs.app }},push-by-digest=true,name-canonical=true,push=true,compression=zstd,force-compression=true
             *.platform=${{ matrix.platform }}
