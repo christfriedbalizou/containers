@@ -43,7 +43,7 @@ docker buildx bake image-local
 ```
 
 The source destination must not already exist. For another version, pass the
-same version to checkout and Bake: `VERSION=v0.4.0 docker buildx bake image-local`.
+same version to checkout and Bake: `VERSION=v0.4.1 docker buildx bake image-local`.
 To build from an existing clean tag export, point `SOURCE_DIR` at the exported
 directory and add `.source-revision` containing the full commit ID.
 
@@ -65,7 +65,8 @@ for provider configuration and S3 deletion permissions.
 The image runs as UID/GID 1000, with root-owned application code at
 `/opt/translator`. Supply the upstream configuration and mounted secret files;
 no credentials or production configuration are built in. Set the database URL
-and storage paths explicitly, using `/data` for writable persistent local data.
+and storage backend explicitly. `INGESTION__LOCAL_STORAGE_PATH` is required
+only for local storage; omit it for S3 deployments.
 `/health` is API liveness and `/ready` checks schema/database/keys/storage.
 Configure health probes per role rather than an API-only image healthcheck.
 
