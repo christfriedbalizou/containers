@@ -43,7 +43,7 @@ docker buildx bake image-local
 ```
 
 The source destination must not already exist. For another version, pass the
-same version to checkout and Bake: `VERSION=v0.4.1 docker buildx bake image-local`.
+same version to checkout and Bake: `VERSION=v0.5.0 docker buildx bake image-local`.
 To build from an existing clean tag export, point `SOURCE_DIR` at the exported
 directory and add `.source-revision` containing the full commit ID.
 
@@ -69,6 +69,14 @@ and storage backend explicitly. `INGESTION__LOCAL_STORAGE_PATH` is required
 only for local storage; omit it for S3 deployments.
 `/health` is API liveness and `/ready` checks schema/database/keys/storage.
 Configure health probes per role rather than an API-only image healthcheck.
+
+Glossary authoring defaults to 2000 entries and 1 MiB per glossary. Configure
+`GLOSSARY__MAX_ENTRIES` and `GLOSSARY__MAX_CONTENT_BYTES` with positive integers;
+the API exposes the effective limits to the paginated editor. The combined
+`INGESTION__MAX_GLOSSARY_SNAPSHOT_BYTES` budget remains independent (1 MiB by
+default). Lowering authoring settings preserves existing records and backups,
+but older application releases cannot read newly created oversized glossaries;
+review stored content before rolling back.
 
 Use the existing homelab Authelia, database, storage and model services. Provision
 and mount the engine/OCR assets and corresponding-source bundle documented by
