@@ -42,7 +42,7 @@ func TestAPIAndMigrations(t *testing.T) {
 			"SESSION_ABSOLUTE_TIMEOUT_SECONDS": "3600",
 		}),
 		testcontainers.WithEntrypoint("sh"),
-		testcontainers.WithCmd("-ec", "printf smoke-test > /tmp/oidc-secret; entrypoint.sh migrate; exec entrypoint.sh api"),
+		testcontainers.WithCmd("-ec", "printf smoke-test > /tmp/oidc-secret; exec entrypoint.sh api"),
 		testcontainers.WithWaitStrategy(wait.ForHTTP("/health").WithPort("8000/tcp").WithStartupTimeout(90*time.Second)),
 	)
 	testcontainers.CleanupContainer(t, c)
@@ -64,4 +64,34 @@ func TestAPIAndMigrations(t *testing.T) {
 	require.NoError(t, err)
 	response.Body.Close()
 	require.Equal(t, http.StatusOK, response.StatusCode)
+}
+
+func TestConcurrentStartupMigrations(t *testing.T) {
+	image := testhelpers.GetTestImage("ghcr.io/christfriedbalizou/translator:rolling")
+	testhelpers.TestCommandSucceeds(t, context.Background(), image, &testhelpers.ContainerConfig{Env: map[string]string{
+		"DATABASE_URL":                     "sqlite+aiosqlite:////tmp/concurrent.sqlite3",
+		"OIDC_ISSUER":                      "https://issuer.invalid",
+		"OIDC_CLIENT_ID":                   "container-smoke-test",
+		"OIDC_CLIENT_SECRET_FILE":          "/tmp/oidc-secret",
+		"OIDC_REDIRECT_URI":                "https://translator.invalid/api/v1/auth/callback",
+		"SESSION_IDLE_TIMEOUT_SECONDS":     "900",
+		"SESSION_ABSOLUTE_TIMEOUT_SECONDS": "3600",
+	}}, "sh", "-ec", `
+printf smoke-test > /tmp/oidc-secret
+entrypoint.sh migrate & first=$!
+entrypoint.sh migrate & second=$!
+wait "$first"
+wait "$second"
+python -c 'import sqlite3; from alembic.config import Config; from alembic.script import ScriptDirectory; assert sqlite3.connect("/tmp/concurrent.sqlite3").execute("select version_num from alembic_version").fetchone()[0] == ScriptDirectory.from_config(Config("alembic.ini")).get_current_head()'
+`)
+}
+
+func TestMigrationFailureStopsStartup(t *testing.T) {
+	image := testhelpers.GetTestImage("ghcr.io/christfriedbalizou/translator:rolling")
+	testhelpers.TestCommandSucceeds(t, context.Background(), image, &testhelpers.ContainerConfig{Env: map[string]string{
+		"DATABASE_URL": "sqlite+aiosqlite:////does-not-exist/database.sqlite3",
+	}}, "sh", "-ec", `
+if entrypoint.sh api; then exit 1; fi
+if entrypoint.sh worker; then exit 1; fi
+`)
 }

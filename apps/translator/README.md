@@ -51,8 +51,10 @@ directory and add `.source-revision` containing the full commit ID.
 
 The default command is `api` (`python -m translator.server`) on port 8000.
 Use the same image with command `worker`, `migrate`, or `retention` for those
-roles. Other commands are executed directly. Run migrations as a separate job
-before starting API/worker replicas; startup does not mutate the database schema.
+roles. API and worker startup automatically migrate the database before executing
+the application. PostgreSQL advisory locks (or a file lock for file-backed SQLite)
+serialize migrations across containers. Migration failures stop startup. No init
+container or separate migration job is required. Other commands execute directly.
 
 Configure providers with `TRANSLATION__PROVIDERS` JSON and mount their API keys
 using each entry's `api_key_file`. The API reconciles these settings at startup;
