@@ -43,7 +43,7 @@ docker buildx bake image-local
 ```
 
 The source destination must not already exist. For another version, pass the
-same version to checkout and Bake: `VERSION=v0.3.0 docker buildx bake image-local`.
+same version to checkout and Bake: `VERSION=v0.4.0 docker buildx bake image-local`.
 To build from an existing clean tag export, point `SOURCE_DIR` at the exported
 directory and add `.source-revision` containing the full commit ID.
 
@@ -53,6 +53,12 @@ The default command is `api` (`python -m translator.server`) on port 8000.
 Use the same image with command `worker`, `migrate`, or `retention` for those
 roles. Other commands are executed directly. Run migrations as a separate job
 before starting API/worker replicas; startup does not mutate the database schema.
+
+Configure providers with `TRANSLATION__PROVIDERS` JSON and mount their API keys
+using each entry's `api_key_file`. The API reconciles these settings at startup;
+no deployment bootstrap script is needed. The first verified OIDC login on a
+fresh database becomes the administrator. See upstream `docs/operations.md`
+for provider configuration and S3 deletion permissions.
 
 The image runs as UID/GID 1000, with root-owned application code at
 `/opt/translator`. Supply the upstream configuration and mounted secret files;
