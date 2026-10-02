@@ -11,7 +11,7 @@ variable "VERSION" {
 
 variable "CODEX_VERSION" {
   // renovate: datasource=npm depName=@openai/codex
-  default = "0.159.3"
+  default = "0.160.0"
 }
 
 variable "MISE_VERSION" {
