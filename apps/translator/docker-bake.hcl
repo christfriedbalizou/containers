@@ -27,6 +27,9 @@ target "image" {
   contexts = {
     translator-source = "${SOURCE_DIR}"
   }
+  secret = ["id=translator-public-key,env=TRANSLATOR_GPG_PUBLIC_KEY"]
+  // Secret contents do not invalidate BuildKit cache; always honor key rotation.
+  no-cache-filter = ["encrypted"]
   args = {
     VERSION = "${VERSION}"
   }

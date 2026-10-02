@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 
@@ -15,9 +16,11 @@ import (
 
 func TestRuntimeContents(t *testing.T) {
 	image := testhelpers.GetTestImage("ghcr.io/christfriedbalizou/translator:rolling")
-	testhelpers.TestCommandSucceeds(t, context.Background(), image, nil, "sh", "-ec", `
+	testCommandSucceeds(t, context.Background(), image, nil, "sh", "-ec", `
+/usr/local/bin/python /usr/local/lib/translator-decrypt.py
+
 test "$(id -u)" = 1000
-test ! -w /opt/translator
+test -f /opt/translator/.decrypted
 test ! -d /opt/translator/.git
 test ! -f /opt/translator/.env
 test -f dist/index.html
@@ -32,6 +35,7 @@ func TestAPIAndMigrations(t *testing.T) {
 	image := testhelpers.GetTestImage("ghcr.io/christfriedbalizou/translator:rolling")
 	c, err := testcontainers.Run(ctx, image,
 		testcontainers.WithExposedPorts("8000/tcp"),
+		translatorSecrets(t),
 		testcontainers.WithEnv(map[string]string{
 			"DATABASE_URL":                     "sqlite+aiosqlite:////tmp/translator-test.sqlite3",
 			"OIDC_ISSUER":                      "https://issuer.invalid",
@@ -68,7 +72,7 @@ func TestAPIAndMigrations(t *testing.T) {
 
 func TestConcurrentStartupMigrations(t *testing.T) {
 	image := testhelpers.GetTestImage("ghcr.io/christfriedbalizou/translator:rolling")
-	testhelpers.TestCommandSucceeds(t, context.Background(), image, &testhelpers.ContainerConfig{Env: map[string]string{
+	testCommandSucceeds(t, context.Background(), image, &testhelpers.ContainerConfig{Env: map[string]string{
 		"DATABASE_URL":                     "sqlite+aiosqlite:////tmp/concurrent.sqlite3",
 		"OIDC_ISSUER":                      "https://issuer.invalid",
 		"OIDC_CLIENT_ID":                   "container-smoke-test",
@@ -88,10 +92,111 @@ python -c 'import sqlite3; from alembic.config import Config; from alembic.scrip
 
 func TestMigrationFailureStopsStartup(t *testing.T) {
 	image := testhelpers.GetTestImage("ghcr.io/christfriedbalizou/translator:rolling")
-	testhelpers.TestCommandSucceeds(t, context.Background(), image, &testhelpers.ContainerConfig{Env: map[string]string{
+	testCommandSucceeds(t, context.Background(), image, &testhelpers.ContainerConfig{Env: map[string]string{
 		"DATABASE_URL": "sqlite+aiosqlite:////does-not-exist/database.sqlite3",
 	}}, "sh", "-ec", `
+/usr/local/bin/python /usr/local/lib/translator-decrypt.py
+
 if entrypoint.sh api; then exit 1; fi
 if entrypoint.sh worker; then exit 1; fi
+`)
+}
+
+func translatorSecrets(t *testing.T) testcontainers.ContainerCustomizer {
+	t.Helper()
+	key := os.Getenv("TRANSLATOR_TEST_PRIVATE_KEY_FILE")
+	require.NotEmpty(t, key, "set TRANSLATOR_TEST_PRIVATE_KEY_FILE to the exported GPG private key")
+	files := []testcontainers.ContainerFile{{HostFilePath: key, ContainerFilePath: "/run/secrets/translator-private-key", FileMode: 0444}}
+	env := map[string]string{}
+	if passphrase := os.Getenv("TRANSLATOR_TEST_PASSPHRASE_FILE"); passphrase != "" {
+		files = append(files, testcontainers.ContainerFile{HostFilePath: passphrase, ContainerFilePath: "/run/secrets/translator-passphrase", FileMode: 0444})
+		env["TRANSLATOR_GPG_PASSPHRASE_FILE"] = "/run/secrets/translator-passphrase"
+	}
+	opts := []testcontainers.ContainerCustomizer{
+		testcontainers.WithFiles(files...),
+		testcontainers.WithEnv(env),
+		testcontainers.WithTmpfs(map[string]string{"/opt/translator": "rw,exec,nosuid,nodev,size=4g,uid=1000,gid=1000,mode=0700"}),
+	}
+	return testcontainers.CustomizeRequestOption(func(req *testcontainers.GenericContainerRequest) error {
+		for _, opt := range opts {
+			if err := opt.Customize(req); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func testCommandSucceeds(t *testing.T, ctx context.Context, image string, config *testhelpers.ContainerConfig, entrypoint string, args ...string) {
+	t.Helper()
+	opts := []testcontainers.ContainerCustomizer{translatorSecrets(t), testcontainers.WithEntrypoint(entrypoint), testcontainers.WithCmd(args...), testcontainers.WithWaitStrategy(wait.ForExit().WithExitTimeout(3 * time.Minute))}
+	if config != nil {
+		opts = append(opts, testcontainers.WithEnv(config.Env))
+	}
+	c, err := testcontainers.Run(ctx, image, opts...)
+	testcontainers.CleanupContainer(t, c)
+	require.NoError(t, err)
+	state, err := c.State(ctx)
+	require.NoError(t, err)
+	if state.ExitCode != 0 {
+		logs, logErr := c.Logs(ctx)
+		if logErr == nil {
+			defer logs.Close()
+			output, _ := io.ReadAll(logs)
+			t.Log(string(output))
+		}
+	}
+	require.Equal(t, 0, state.ExitCode)
+}
+
+func TestEncryptedImageWithoutKey(t *testing.T) {
+	image := testhelpers.GetTestImage("ghcr.io/christfriedbalizou/translator:rolling")
+	testhelpers.TestCommandSucceeds(t, context.Background(), image, nil, "sh", "-ec", `
+ test -s /usr/share/translator/payload.tar.gz.gpg
+ test ! -e /opt/translator/.venv
+ test ! -e /opt/translator/migrations
+ if entrypoint.sh true; then exit 1; fi
+ `)
+}
+
+func TestDecryptionFailures(t *testing.T) {
+	image := testhelpers.GetTestImage("ghcr.io/christfriedbalizou/translator:rolling")
+	for _, key := range []string{"/run/secrets/missing", "/usr/share/translator/LICENSE"} {
+		t.Run(key, func(t *testing.T) {
+			testCommandSucceeds(t, context.Background(), image, &testhelpers.ContainerConfig{Env: map[string]string{"TRANSLATOR_GPG_PRIVATE_KEY_FILE": key}}, "sh", "-ec", `
+if entrypoint.sh true; then exit 1; fi
+test ! -e /opt/translator/.decrypted
+test ! -e /opt/translator/.venv
+`)
+		})
+	}
+	testCommandSucceeds(t, context.Background(), image, nil, "sh", "-ec", `
+mkdir -m 700 /opt/translator/wrong-key-home
+gpg --homedir /opt/translator/wrong-key-home --batch --pinentry-mode loopback --passphrase '' --quick-generate-key 'Wrong test key' rsa2048 encr 1d >/dev/null 2>&1
+gpg --homedir /opt/translator/wrong-key-home --batch --armor --export-secret-keys > /opt/translator/wrong-key
+if TRANSLATOR_GPG_PRIVATE_KEY_FILE=/opt/translator/wrong-key entrypoint.sh true; then exit 1; fi
+gpgconf --homedir /opt/translator/wrong-key-home --kill gpg-agent
+test ! -e /opt/translator/.decrypted
+/usr/local/bin/python - <<'PY'
+import importlib.util
+from pathlib import Path
+import subprocess
+spec = importlib.util.spec_from_file_location("decrypt", "/usr/local/lib/translator-decrypt.py")
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+data = module.PAYLOAD.read_bytes()
+module.PAYLOAD = Path("/opt/translator/corrupt.gpg")
+module.PAYLOAD.write_bytes(data[:-32])
+del data
+try:
+    module.unlock()
+except subprocess.CalledProcessError:
+    pass
+else:
+    raise AssertionError("corrupted payload accepted")
+assert not Path("/opt/translator/.decrypted").exists()
+assert not Path("/opt/translator/.venv").exists()
+assert not list(Path("/opt/translator").glob(".decrypt-*"))
+PY
 `)
 }

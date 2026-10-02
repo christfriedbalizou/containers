@@ -1,6 +1,9 @@
 #!/bin/sh
 set -eu
 
+/usr/local/bin/python /usr/local/lib/translator-decrypt.py
+cd /opt/translator
+
 if [ "$#" -eq 0 ]; then set -- api; fi
 case "$1" in
     api|worker|migrate)

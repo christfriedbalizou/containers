@@ -19,9 +19,21 @@ COPY --from=translator-source . .
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev --no-editable
 
+FROM backend AS encrypted
+RUN apt-get update && apt-get install -y --no-install-recommends gnupg \
+    && rm -rf /var/lib/apt/lists/*
+# Archive before encrypting: failures cannot be hidden by a shell pipeline.
+RUN --mount=type=secret,id=translator-public-key,required=true \
+    --mount=type=tmpfs,target=/root/.gnupg \
+    --mount=type=tmpfs,target=/payload \
+    tar -czf /payload/app.tar.gz .venv alembic.ini migrations \
+    && chmod 0700 /root/.gnupg && gpg --batch --no-options --homedir /root/.gnupg \
+        --recipient-file /run/secrets/translator-public-key \
+        --compress-algo none --output /payload.tar.gz.gpg --encrypt /payload/app.tar.gz
+
 FROM python-base AS runtime
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates libgomp1 libseccomp2 libstdc++6 \
+    && apt-get install -y --no-install-recommends ca-certificates gnupg libgomp1 libseccomp2 libstdc++6 \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid 1000 translator \
     && useradd --uid 1000 --gid 1000 --no-create-home --home-dir /tmp/translator translator \
@@ -32,10 +44,10 @@ ENV PATH="/opt/translator/.venv/bin:${PATH}" \
     PYTHONUNBUFFERED=1 \
     HOME=/tmp/translator
 WORKDIR /opt/translator
-COPY --from=backend /opt/translator/.venv ./.venv
-COPY --from=frontend /src/dist ./dist
-COPY --from=translator-source alembic.ini LICENSE ./
-COPY --from=translator-source migrations ./migrations
+COPY --from=encrypted /payload.tar.gz.gpg /usr/share/translator/payload.tar.gz.gpg
+COPY --from=frontend /src/dist /usr/share/translator/dist
+COPY --from=translator-source LICENSE /usr/share/translator/LICENSE
+COPY decrypt.py /usr/local/lib/translator-decrypt.py
 COPY --from=translator-source .source-revision /usr/share/translator/source-revision
 COPY --chmod=0755 entrypoint.sh /usr/local/bin/entrypoint.sh
 

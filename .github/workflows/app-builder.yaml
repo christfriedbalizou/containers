@@ -131,6 +131,8 @@ jobs:
       - name: Build App
         uses: docker/bake-action@018cb6412ab401ebaa809aa5f85966b74628600f # v7.4.0
         id: bake
+        env:
+          TRANSLATOR_GPG_PUBLIC_KEY: ${{ inputs.app == 'translator' && secrets.TRANSLATOR_GPG_PUBLIC_KEY || '' }}
         with:
           files: |
             ./docker-bake.hcl
@@ -268,12 +270,30 @@ jobs:
           client-id: ${{ secrets.BOT_APP_ID }}
           private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
 
+      - name: Prepare Translator Test Key
+        if: ${{ inputs.app == 'translator' }}
+        env:
+          PRIVATE_KEY: ${{ secrets.TRANSLATOR_GPG_PRIVATE_KEY }}
+          PASSPHRASE: ${{ secrets.TRANSLATOR_GPG_PASSPHRASE }}
+        run: |
+          umask 077
+          test -n "$PRIVATE_KEY" || { echo "Missing TRANSLATOR_GPG_PRIVATE_KEY" >&2; exit 1; }
+          mkdir -p "$RUNNER_TEMP/translator-test-secrets"
+          printf '%s\n' "$PRIVATE_KEY" > "$RUNNER_TEMP/translator-test-secrets/private-key"
+          printf '%s' "$PASSPHRASE" > "$RUNNER_TEMP/translator-test-secrets/passphrase"
+          echo "TRANSLATOR_TEST_PRIVATE_KEY_FILE=$RUNNER_TEMP/translator-test-secrets/private-key" >> "$GITHUB_ENV"
+          echo "TRANSLATOR_TEST_PASSPHRASE_FILE=$RUNNER_TEMP/translator-test-secrets/passphrase" >> "$GITHUB_ENV"
+
       - name: Run App Tests
         uses: ./.github/actions/app-tests
         with:
           app: ${{ inputs.app }}
           image: ghcr.io/${{ github.repository_owner }}/${{ inputs.app }}@${{ needs.merge.outputs.digest }}
           token: ${{ github.token }}
+
+      - name: Remove Translator Test Key
+        if: ${{ always() && inputs.app == 'translator' }}
+        run: rm -rf "$RUNNER_TEMP/translator-test-secrets"
 
       - name: Get App Size Diff
         uses: ./.github/actions/app-size-diff
