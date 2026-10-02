@@ -43,7 +43,7 @@ docker buildx bake image-local
 ```
 
 The source destination must not already exist. For another version, pass the
-same version to checkout and Bake: `VERSION=v0.5.0 docker buildx bake image-local`.
+same version to checkout and Bake: `VERSION=v0.6.0 docker buildx bake image-local`.
 To build from an existing clean tag export, point `SOURCE_DIR` at the exported
 directory and add `.source-revision` containing the full commit ID.
 
