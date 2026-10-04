@@ -6,7 +6,7 @@ variable "APP" {
 
 variable "VERSION" {
   // renovate: datasource=forgejo-tags depName=christfried.balizou/translator
-  default = "v0.6.0"
+  default = "v0.8.1"
 }
 
 variable "SOURCE" {
