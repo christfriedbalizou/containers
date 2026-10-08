@@ -3,7 +3,7 @@ module github.com/christfriedbalizou/containers
 go 1.25.1
 
 require (
-	github.com/docker/go-connections v0.8.1
+	github.com/docker/go-connections v0.8.2
 	github.com/stretchr/testify v1.12.1
 	github.com/testcontainers/testcontainers-go v0.44.0
 )
