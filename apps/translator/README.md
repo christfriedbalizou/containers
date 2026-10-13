@@ -138,7 +138,7 @@ container or separate migration job is required. Other commands execute directly
 Configure providers with `TRANSLATION__PROVIDERS` JSON and mount their API keys
 using each entry's `api_key_file`. The API reconciles these settings at startup;
 no deployment bootstrap script is needed. The first verified OIDC login on a
-fresh database becomes the administrator. See upstream `docs/operations.md`
+fresh database becomes the administrator. See upstream README runtime and recovery instructions
 for provider configuration and S3 deletion permissions.
 
 The image runs as UID/GID 1000, with application code decrypted into its private tmpfs at
@@ -166,5 +166,5 @@ Workers require the upstream Linux Landlock ABI 6+ sandbox support, private
 `/dev/shm` tmpfs, explicit resource limits and restricted network access.
 PostgreSQL backup/restore commands additionally need client tools matching the
 database server version; those operator tools are not bundled in this image.
-See the upstream `docs/operations.md` and `docs/source-distribution.md` for
+See the upstream README runtime and recovery instructions and source license for
 deployment requirements.
