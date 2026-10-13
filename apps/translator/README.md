@@ -158,11 +158,9 @@ but older application releases cannot read newly created oversized glossaries;
 review stored content before rolling back.
 
 Use the existing homelab Authelia, database, storage and model services. Provision
-and mount the engine/OCR assets and corresponding-source bundle documented by
-upstream. The image includes frontend assets and Alembic migrations; it does not
-provision external services or download models at startup. Mount the reviewed
-source archive outside `dist/` and set `SOURCE_DISTRIBUTION__ARCHIVE`,
-`SOURCE_DISTRIBUTION__REVISION`, and `SOURCE_DISTRIBUTION__SHA256` together.
+and mount the engine/OCR assets documented by upstream. The image includes
+frontend assets and Alembic migrations; it does not provision external services
+or download models at startup.
 
 Workers require the upstream Linux Landlock ABI 6+ sandbox support, private
 `/dev/shm` tmpfs, explicit resource limits and restricted network access.
