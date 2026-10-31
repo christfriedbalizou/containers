@@ -25,7 +25,7 @@ private source builds, matching Translator's packaging boundary.
 From this directory, provide the checkout credentials through the environment:
 
 ```sh
-bash fetch-source.sh v0.1.0 source
+bash fetch-source.sh v0.1.1 source
 docker buildx bake image-local
 ```
 
@@ -47,7 +47,7 @@ docker run --rm \
   --mount type=bind,src="$PWD/playlist-url",dst=/run/secrets/playlist-url,readonly \
   -e TV_GUIDES_WORK_DIR=/data \
   -e TV_GUIDES_PLAYLIST_URL_FILE=/run/secrets/playlist-url \
-  tv-guides:v0.1.0 refresh
+  tv-guides:v0.1.1 refresh
 ```
 
 Create `playlist-url` with the provider's full M3U URL and make it readable by
@@ -63,5 +63,13 @@ configuration is installed by the image.
 Run the container contract tests from the packaging repository root:
 
 ```sh
-TEST_IMAGE=tv-guides:v0.1.0 go test -v ./apps/tv-guides/...
+TEST_IMAGE=tv-guides:v0.1.1 go test -v ./apps/tv-guides/...
 ```
+
+## Logs
+
+The application writes UTC console logs to stderr. `TV_GUIDES_LOG_LEVEL`
+defaults to `INFO`; set it to `DEBUG` for stage and scheduling details, or
+`ERROR` for failures only. Logs show refresh counts, duration and safe failure
+context without provider URLs or raw exception text. No log-file mount is
+needed. When deployed in Kubernetes, read them through `kubectl logs`.
