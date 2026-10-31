@@ -17,3 +17,7 @@ area/renovate:
       - any-glob-to-any-file:
           - .renovate/**/*
           - .renovaterc.json5
+app/tv-guides:
+  - changed-files:
+      - any-glob-to-any-file:
+          - apps/tv-guides/**

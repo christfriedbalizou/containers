@@ -128,6 +128,16 @@ jobs:
           VERSION: ${{ steps.app-options.outputs.version }}
         run: bash apps/translator/fetch-source.sh "$VERSION" apps/translator/source
 
+      - name: Fetch TV guides Release
+        if: ${{ inputs.app == 'tv-guides' }}
+        id: tv-guides-source
+        env:
+          SECRET_DOMAIN: ${{ secrets.SECRET_DOMAIN }}
+          FORGEJO_USERNAME: ${{ secrets.FORGEJO_USERNAME }}
+          FORGEJO_ACCESS_TOKEN: ${{ secrets.FORGEJO_ACCESS_TOKEN }}
+          VERSION: ${{ steps.app-options.outputs.version }}
+        run: bash apps/tv-guides/fetch-source.sh "$VERSION" apps/tv-guides/source
+
       - name: Build App
         uses: docker/bake-action@59cb1203cd42bcefd40a1b6d73b589e48c86040e # v7.5.0
         id: bake
@@ -140,12 +150,12 @@ jobs:
           # Private source stages must not be exported to a public registry cache.
           set: |
             *.args.VENDOR=${{ github.repository_owner }}
-            *.cache-from=${{ inputs.app != 'translator' && format('type=registry,ref=ghcr.io/{0}/build_cache:{1}-{2},mode=max', github.repository_owner, inputs.app, steps.target.outputs.arch) || '' }}
-            *.cache-to=${{ inputs.release && inputs.app != 'translator' && format('type=registry,ref=ghcr.io/{0}/build_cache:{1}-{2},mode=max,compression=zstd,force-compression=true', github.repository_owner, inputs.app, steps.target.outputs.arch) || '' }}
+            *.cache-from=${{ inputs.app != 'translator' && inputs.app != 'tv-guides' && format('type=registry,ref=ghcr.io/{0}/build_cache:{1}-{2},mode=max', github.repository_owner, inputs.app, steps.target.outputs.arch) || '' }}
+            *.cache-to=${{ inputs.release && inputs.app != 'translator' && inputs.app != 'tv-guides' && format('type=registry,ref=ghcr.io/{0}/build_cache:{1}-{2},mode=max,compression=zstd,force-compression=true', github.repository_owner, inputs.app, steps.target.outputs.arch) || '' }}
             *.labels.org.opencontainers.image.title=${{ inputs.app }}
             *.labels.org.opencontainers.image.url=https://ghcr.io/${{ github.repository_owner }}/${{ inputs.app }}
             *.labels.org.opencontainers.image.version=${{ steps.app-options.outputs.version }}
-            *.labels.org.opencontainers.image.revision=${{ steps.translator-source.outputs.revision || github.sha }}
+            *.labels.org.opencontainers.image.revision=${{ steps.tv-guides-source.outputs.revision || steps.translator-source.outputs.revision || github.sha }}
             *.labels.org.opencontainers.image.vendor=${{ github.repository_owner }}
             *.output=type=image,name=ghcr.io/${{ github.repository_owner }}/${{ inputs.app }},push-by-digest=true,name-canonical=true,push=true,compression=zstd,force-compression=true
             *.platform=${{ matrix.platform }}

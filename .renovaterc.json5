@@ -39,6 +39,19 @@
       allowedVersions: "/^v[0-9]+\\.[0-9]+\\.[0-9]+$/",
     },
     {
+      description: ["TV guides release tags from private Forgejo"],
+      matchDatasources: ["forgejo-tags"],
+      matchPackageNames: ["christfried.balizou/tv-guides"],
+      sourceUrl: "https://github.com/christfriedbalizou/containers",
+      sourceDirectory: "apps/tv-guides",
+      fetchChangeLogs: "off",
+      prBodyDefinitions: {
+        Package: "`{{{depName}}}`",
+        Change: "`{{{currentValue}}}` → `{{{newValue}}}`",
+      },
+      allowedVersions: "/^v[0-9]+\\.[0-9]+\\.[0-9]+$/",
+    },
+    {
       description: ["Release Rules for App Updates"],
       addLabels: ["app/{{parentDir}}"],
       additionalBranchPrefix: "{{parentDir}}-",
@@ -76,6 +89,13 @@
       automerge: false,
     },
     {
+      description: ["TV guides owner-approved automerge for every update type"],
+      matchFileNames: ["apps/tv-guides/**"],
+      automerge: true,
+      automergeType: "pr",
+      ignoreTests: false,
+    },
+    {
       description: ["Do Not Use Floating Docker Tags"],
       matchDatasources: ["docker"],
       allowedVersions: "!/^(latest)$/",
@@ -106,6 +126,13 @@
       matchFileNames: ["apps/translator/Dockerfile"],
       matchPackageNames: ["python"],
       allowedVersions: "/^3\\.12\\.[0-9]+-slim-bookworm$/",
+    },
+    {
+      description: ["TV guides tracks concrete Python Alpine versions"],
+      matchDatasources: ["docker"],
+      matchFileNames: ["apps/tv-guides/Dockerfile"],
+      matchPackageNames: ["python"],
+      allowedVersions: "/^[0-9]+\\.[0-9]+\\.[0-9]+-alpine[0-9]+\\.[0-9]+$/",
     }
   ],
 }

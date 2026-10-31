@@ -20,3 +20,5 @@
 # Uncategorized
 - name: stale
   color: c5def5
+- name: app/tv-guides
+  color: 027fa0
