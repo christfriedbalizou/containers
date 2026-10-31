@@ -7,7 +7,7 @@ COPY --from=uv /uv /usr/local/bin/uv
 ENV UV_PYTHON_DOWNLOADS=never UV_LINK_MODE=copy
 WORKDIR /opt/tv-guides
 COPY --from=tv-guides-source . .
-RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked --no-dev --no-editable
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --python /usr/local/bin/python --locked --no-dev --no-editable
 ARG VERSION
 RUN VERSION="$VERSION" .venv/bin/python -c 'import importlib.metadata, os; assert importlib.metadata.version("tv-guides") == os.environ["VERSION"].removeprefix("v")'
 
