@@ -16,7 +16,7 @@ RUN addgroup -g 1000 tvguides && adduser -D -u 1000 -G tvguides tvguides \
     && mkdir -p /data && chown 1000:1000 /data && chmod 0700 /data
 ENV PATH="/opt/tv-guides/.venv/bin:${PATH}" \
     PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
-    TV_GUIDES_WORK_DIR=/data/state
+    TV_GUIDES_WORK_DIR=/data
 WORKDIR /opt/tv-guides
 COPY --from=build /opt/tv-guides/.venv .venv
 COPY --from=tv-guides-source LICENSE /usr/share/tv-guides/LICENSE
