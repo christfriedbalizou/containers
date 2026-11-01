@@ -25,7 +25,7 @@ private source builds, matching Translator's packaging boundary.
 From this directory, provide the checkout credentials through the environment:
 
 ```sh
-bash fetch-source.sh v0.4.0 source
+bash fetch-source.sh v0.4.1 source
 docker buildx bake image-local
 ```
 
@@ -52,7 +52,7 @@ docker run --rm \
   --mount type=bind,src="$PWD/playlist-url",dst=/run/secrets/playlist-url,readonly \
   -e TV_GUIDES_WORK_DIR=/data \
   -e TV_GUIDES_PLAYLIST_URL_FILE=/run/secrets/playlist-url \
-  tv-guides:v0.4.0 refresh
+  tv-guides:v0.4.1 refresh
 ```
 
 Create `playlist-url` with the provider's full M3U URL and make it readable by
@@ -71,7 +71,7 @@ installed by the image.
 Run the container contract tests from the packaging repository root:
 
 ```sh
-TEST_IMAGE=tv-guides:v0.4.0 go test -v ./apps/tv-guides/...
+TEST_IMAGE=tv-guides:v0.4.1 go test -v ./apps/tv-guides/...
 ```
 
 ## Logs
