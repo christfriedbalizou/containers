@@ -6,7 +6,7 @@ variable "APP" {
 
 variable "VERSION" {
   // renovate: datasource=forgejo-tags depName=christfried.balizou/tv-guides
-  default = "v0.3.1"
+  default = "v0.4.0"
 }
 
 variable "SOURCE" {
