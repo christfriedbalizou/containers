@@ -35,17 +35,28 @@ match the package version; the build checks it.
 
 ## Persistent state
 
-The image runs as UID/GID 1000. Mount a private writable directory at `/data`.
-It holds SQLite, `config.json`, inventory reports and generated M3U/XMLTV files.
-Set `TV_GUIDES_WORK_DIR` to another mounted path when needed. The default
+The image runs as UID/GID 1000. Mount a writable directory at `/data`. The
+entrypoint creates a private `/data/state` working directory before starting
+the application. It holds SQLite, `config.json`, inventory reports and
+generated M3U/XMLTV files. NFS access follows the server's identity mapping;
+startup does not run `chown` or `chmod` on the share.
+
+For an existing `/data` layout, the entrypoint moves recognized state entries
+into `state/`, including the database, backups, caches and current generation.
+It checks all destinations first and refuses to overwrite conflicting state.
+Repeated startup is safe. Run only one worker per data directory.
+
+Set `TV_GUIDES_WORK_DIR` to another mounted path when needed. Automatic legacy
+migration applies only to `/data/state`; setting `/data` explicitly retains
+the previous layout and its private-directory requirements. The default
 command is `run`; use `refresh` for a single run.
 
 ```sh
-mkdir -m 700 state
+mkdir -p state
 docker run --rm \
   --mount type=bind,src="$PWD/state",dst=/data \
   --mount type=bind,src="$PWD/playlist-url",dst=/run/secrets/playlist-url,readonly \
-  -e TV_GUIDES_WORK_DIR=/data \
+  -e TV_GUIDES_WORK_DIR=/data/state \
   -e TV_GUIDES_PLAYLIST_URL_FILE=/run/secrets/playlist-url \
   tv-guides:v0.2.0 refresh
 ```
@@ -55,8 +66,9 @@ UID 1000. `TV_GUIDES_PLAYLIST_URL` is available when a URL file cannot be used.
 `TV_GUIDES_INTERVAL_SECONDS` sets the refresh interval, defaulting to 43200.
 The upstream README documents profiles, mapping rules and backup/restore.
 
-Matched output is published through `/data/current/playlist.m3u` and
-`/data/current/guide.xml`. The M3U contains private stream URLs. Keep the mount
+Matched output is published through `/data/state/current/playlist.m3u` and
+`/data/state/current/guide.xml`. Update consumers' file paths when upgrading
+from the previous default. The M3U contains private stream URLs. Keep the mount
 private and back up the database before replacing state. No Jellyfin or homelab
 configuration is installed by the image.
 
