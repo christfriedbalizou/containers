@@ -31,6 +31,7 @@ python - <<'PY'
 import importlib.metadata
 import os
 import sqlite3
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import patch
@@ -43,7 +44,7 @@ from tv_guides.sources import GuideChannel, Programme
 assert importlib.metadata.version("tv-guides") == Path("/usr/share/tv-guides/source-tag").read_text().strip().removeprefix("v")
 assert Path(tv_guides.__file__).suffix == ".py"
 work = Path(os.environ["TV_GUIDES_WORK_DIR"])
-settings = load_settings(work)
+settings = replace(load_settings(work), discover_guides=False)
 now = datetime.now(timezone.utc)
 guide = GuideChannel("fixture", "100", "BBC Scotland", "United Kingdom", "Central Scotland", frozenset({"BBCSCOTLAND"}), programmes=(Programme(now, now + timedelta(hours=1), "Fixture"),))
 playlist = '#EXTM3U\n#EXTINF:-1 group-title="UK VIP NEW",UK: BBC Scotland\nhttp://example.invalid/fixture/1\n#EXTINF:-1 group-title="UK VIP NEW",UK: BBC Scotland\nhttp://example.invalid/fixture/2\n'
