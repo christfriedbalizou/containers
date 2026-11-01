@@ -25,7 +25,7 @@ private source builds, matching Translator's packaging boundary.
 From this directory, provide the checkout credentials through the environment:
 
 ```sh
-bash fetch-source.sh v0.3.1 source
+bash fetch-source.sh v0.4.0 source
 docker buildx bake image-local
 ```
 
@@ -52,7 +52,7 @@ docker run --rm \
   --mount type=bind,src="$PWD/playlist-url",dst=/run/secrets/playlist-url,readonly \
   -e TV_GUIDES_WORK_DIR=/data \
   -e TV_GUIDES_PLAYLIST_URL_FILE=/run/secrets/playlist-url \
-  tv-guides:v0.3.1 refresh
+  tv-guides:v0.4.0 refresh
 ```
 
 Create `playlist-url` with the provider's full M3U URL and make it readable by
@@ -71,7 +71,7 @@ installed by the image.
 Run the container contract tests from the packaging repository root:
 
 ```sh
-TEST_IMAGE=tv-guides:v0.3.1 go test -v ./apps/tv-guides/...
+TEST_IMAGE=tv-guides:v0.4.0 go test -v ./apps/tv-guides/...
 ```
 
 ## Logs
@@ -88,8 +88,12 @@ holds monthly identity caches, resumable schedule downloads and
 `discover_guides` to `false` in the persisted `config.json` to use only explicit
 source profiles. A first discovery run can take tens of minutes.
 
-Confirmed live channels from other countries are included without invented
-programme listings. The global identity catalogue is cached for 30 days.
+Confirmed live channels from other countries are included. Their programmes
+come from hosted country XMLTV files when exactly one source channel matches;
+other channels have no invented listings. The global identity catalogue is
+cached for 30 days and country XMLTV files for six hours. Every refresh
+removes adult channels using provider labels and a freshly downloaded adult
+blocklist; `reports/adult-blocked.csv` counts the removed entries.
 `reports/group-issues.csv` and `reports/playlist-issues.csv` explain guide gaps,
 excluded identities and what information would help resolve them. Matching
 uses deterministic lookups and makes no AI API calls.
