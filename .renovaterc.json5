@@ -128,6 +128,13 @@
       allowedVersions: "/^3\\.12\\.[0-9]+-slim-bookworm$/",
     },
     {
+      description: ["Translator builds its frontend with the Node 24 line it tests"],
+      matchDatasources: ["docker"],
+      matchFileNames: ["apps/translator/Dockerfile"],
+      matchPackageNames: ["node"],
+      allowedVersions: "/^24\\.[0-9]+\\.[0-9]+-bookworm-slim$/",
+    },
+    {
       description: ["TV guides tracks concrete Python Alpine versions"],
       matchDatasources: ["docker"],
       matchFileNames: ["apps/tv-guides/Dockerfile"],
